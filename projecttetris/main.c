@@ -261,6 +261,8 @@ void resetBlock(Block* block)
     block->current = false;
 }
 
+void printCanvas(Block )
+
 int main() 
 {
     srand(time(NULL));
