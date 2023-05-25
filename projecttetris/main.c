@@ -334,6 +334,40 @@ void printCanvas(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
     return;
 }
 
+int clearLine(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
+    for (int i = 0; i < CANVAS_HEIGHT; i++) {
+        for (int j = 0; j < CANVAS_WIDTH; j++) {
+            if (canvas[i][j].current) {
+                canvas[i][j].current = false;
+            }
+        }
+    }
+
+    int lineCleared = 0;
+
+    for (int i = CANVAS_HEIGHT - 1; i >= 0; i--) {
+        bool isFull = ture;
+        for (int j = 0; j < CANVAS_WIDTH; j++) {
+            if (canvas[i][j].shape == EMPTY) {
+                isFull = false;
+                break;
+            }
+        }
+
+        if (isFull) {
+            lineCleared += 1;
+
+            for (int j = i; j > 0; j--) {
+                for (int k = 0; k < CANVAS_WIDTH; K++) {
+                    setBlock()
+                    resetBlock()
+                }
+            }
+        }
+    }
+
+}
+
 void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 {
     if (ROTATE_FUNC()) {
@@ -347,14 +381,14 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
     {
         if (move(canvas, state->x, state->y, state->rotate, state->x - 1, state->y, state->rotate, state->queue[0]))
         {
-            state->X -= 1;
+            state->x -= 1;
         }
     }
     else if (RIGHT_FUNC())
     {
         if (move(canvas, state->x, state->y, state->rotate, state->x + 1, state->y, state->rotate, state->queue[0]))
         {
-            state->X += 1;
+            state->x += 1;
         }
     }
     else if (DOWN_FUNC())
