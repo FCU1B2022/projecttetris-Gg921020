@@ -4,14 +4,14 @@
 #include <time.h>
 #include <windows.h>
 
-#define LEFT_KEY 0X25
-#define RIGHT_KEY 0X27
-#define ROTATE_KEY 0X26
-#define DOWN_KEY 0X28
-#define FALL_KEY 0X20
+#define LEFT_KEY 0x25     // The key to move left, default = 0x25 (left arrow)
+#define RIGHT_KEY 0x27    // The key to move right, default = 0x27 (right arrow)
+#define ROTATE_KEY 0x26   // The key to rotate, default = 0x26 (up arrow)
+#define DOWN_KEY 0x28     // The key to move down, default = 0x28 (down arrow)
+#define FALL_KEY 0x20     // The key to fall, default = 0x20 (spacebar)
 
-#define FALL_DELAY 500
-#define RENDER_DELAY 100
+#define FALL_DELAY 500    // The delay between each fall, default = 500
+#define RENDER_DELAY 100  // The delay between each frame, default = 100
 
 #define LEFT_FUNC() GetAsyncKeyState(LEFT_KEY) & 0x8000
 #define RIGHT_FUNC() GetAsyncKeyState(RIGHT_KEY) & 0x8000
@@ -330,7 +330,23 @@ void printCanvas(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
         printf("\033[0m|\n");
     }
 
-    Shape shapeData = shape[state->queue[1]];
+    Shape shapeData = shapes[state->queue[1]];
+    printf("\033[%d;%dHNext:", 3, CANVAS_WIDTH * 2 + 5);
+    for (int i = 1; i <= 3; i++)
+    {
+        shapeData = shapes[state->queue[i]];
+        for (int j = 0; j < 4; j++) {
+            printf("\033[%d;%dH", i * 4 + j, CANVAS_WIDTH * 2 + 15);
+            for (int k = 0; k < 4; k++) {
+                if (j < shapeData.size && k < shapeData.size && shapeData.rotates[0][j][k]) {
+                    printf("\x1b[%dm  ", shapeData.color);
+                }
+                else {
+                    printf("\x1b[0m  ");
+                }
+            }
+        }
+    }
     return;
 }
 
@@ -343,11 +359,13 @@ int clearLine(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
         }
     }
 
-    int lineCleared = 0;
+    int linesCleared = 0;
 
-    for (int i = CANVAS_HEIGHT - 1; i >= 0; i--) {
-        bool isFull = ture;
-        for (int j = 0; j < CANVAS_WIDTH; j++) {
+    for (int i = CANVAS_HEIGHT - 1; i >= 0; i--)
+    {
+        bool isFull = true;
+        for (int j = 0; j < CANVAS_WIDTH; j++)
+        {
             if (canvas[i][j].shape == EMPTY) {
                 isFull = false;
                 break;
@@ -355,17 +373,22 @@ int clearLine(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH]) {
         }
 
         if (isFull) {
-            lineCleared += 1;
+            linesCleared += 1;
 
-            for (int j = i; j > 0; j--) {
-                for (int k = 0; k < CANVAS_WIDTH; K++) {
-                    setBlock()
-                    resetBlock()
+            for (int j = i; j > 0; j--)
+            {
+                for (int k = 0; k < CANVAS_WIDTH; k++)
+                {
+                    setBlock(&canvas[j][k], canvas[j - 1][k].color, canvas[j - 1][k].shape, false);
+                    resetBlock(&canvas[j - 1][k]);
                 }
             }
+            i++;
         }
     }
 
+
+    return linesCleared;
 }
 
 void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
@@ -377,26 +400,22 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
             state->rotate = newRotate;
         }
     }
-    else if (LEFT_FUNC())
-    {
+    else if (LEFT_FUNC()) {
         if (move(canvas, state->x, state->y, state->rotate, state->x - 1, state->y, state->rotate, state->queue[0]))
         {
             state->x -= 1;
         }
     }
-    else if (RIGHT_FUNC())
-    {
+    else if (RIGHT_FUNC()) {
         if (move(canvas, state->x, state->y, state->rotate, state->x + 1, state->y, state->rotate, state->queue[0]))
         {
             state->x += 1;
         }
     }
-    else if (DOWN_FUNC())
-    {
+    else if (DOWN_FUNC()) {
         state->fallTime = FALL_DELAY;
     }
-    else if (FALL_FUNC())
-    {
+    else if (FALL_FUNC()) {
         state->fallTime += FALL_DELAY * CANVAS_HEIGHT;
     }
 
@@ -404,6 +423,7 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 
     while (state->fallTime >= FALL_DELAY) {
         state->fallTime -= FALL_DELAY;
+
         if (move(canvas, state->x, state->y, state->rotate, state->x, state->y + 1, state->rotate, state->queue[0])) {
             state->y++;
         }
@@ -412,21 +432,20 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
 
             state->x = CANVAS_WIDTH / 2;
             state->y = 0;
-            state->rotete = 0;
+            state->rotate = 0;
             state->fallTime = 0;
             state->queue[0] = state->queue[1];
             state->queue[1] = state->queue[2];
             state->queue[2] = state->queue[3];
             state->queue[3] = rand() % 7;
 
-            if (!move(canvas, state->x, state->y, state->rotate, state->x, state->y, newRotate, state->queue[0])) {
-                printf("\033[%d;%dH\x1b[41m GAME OVER")
+            if (!move(canvas, state->x, state->y, state->rotate, state->x, state->y, state->rotate, state->queue[0]))
+            {
+                printf("\033[%d;%dH\x1b[41m GAME OVER \x1b[0m\033[%d;%dH", CANVAS_HEIGHT - 3, CANVAS_WIDTH * 2 + 5, CANVAS_HEIGHT + 5, 0);
                 exit(0);
             }
         }
     }
-
-    
     return;
 }
 
@@ -441,7 +460,7 @@ int main()
         .fallTime = 0
     };
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 4; i++)
     {
         state.queue[i] = rand() % 7;
     }
@@ -456,7 +475,7 @@ int main()
     }
 
     system("cls");
-    printf("\e[?25l"); // hide cursor
+    // printf("\e[?25l"); // hide cursor
 
     move(canvas, state.x, state.y, state.rotate, state.x, state.y, state.rotate, state.queue[0]);
 
