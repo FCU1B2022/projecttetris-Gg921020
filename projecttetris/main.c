@@ -58,6 +58,7 @@ typedef struct
     int score;
     int rotate;
     int fallTime;
+    int updatespeed;
     ShapeId queue[4];
 }State;
 
@@ -420,7 +421,7 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
     }
 
     state->fallTime += RENDER_DELAY;
-
+    
     while (state->fallTime >= FALL_DELAY) {
         state->fallTime -= FALL_DELAY;
 
@@ -428,7 +429,12 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
             state->y++;
         }
         else {
-            state->score += clearLine(canvas);
+            if (state->score % 3 == 0 && state->score > 0) {
+                state->score += 2 * clearLine(canvas);
+            }
+            else {
+                state->score += clearLine(canvas);
+            }
             state->x = CANVAS_WIDTH / 2;
             state->y = 0;
             state->rotate = 0;
@@ -438,12 +444,11 @@ void logic(Block canvas[CANVAS_HEIGHT][CANVAS_WIDTH], State* state)
             state->queue[2] = state->queue[3];
             state->queue[3] = rand() % 7;
 
-            
-
             if (!move(canvas, state->x, state->y, state->rotate, state->x, state->y, state->rotate, state->queue[0]))
             {
                 printf("\033[%d;%dH\x1b[41m GAME OVER \x1b[0m\033[%d;%dH", CANVAS_HEIGHT - 3, CANVAS_WIDTH * 2 + 5, CANVAS_HEIGHT + 5, 0);
                 exit(0);
+                
             }
             printf("\033[%d;%dH\x1b[41m Score: %d \x1b[0m\033[%d;%dH", CANVAS_HEIGHT - 2, CANVAS_WIDTH * 2 + 5, state->score, CANVAS_HEIGHT + 5, 0);
         }
@@ -459,9 +464,10 @@ int main()
         .y = 0,
         .score = 0,
         .rotate = 0,
-        .fallTime = 0
+        .fallTime = 0,
+        .updatespeed = 100
     };
-
+    
     for (int i = 0; i < 4; i++)
     {
         state.queue[i] = rand() % 7;
@@ -480,7 +486,7 @@ int main()
     // printf("\e[?25l"); // hide cursor
 
     move(canvas, state.x, state.y, state.rotate, state.x, state.y, state.rotate, state.queue[0]);
-
+    
     while (1)
     {
         logic(canvas, &state);
